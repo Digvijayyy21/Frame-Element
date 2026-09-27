@@ -10,9 +10,9 @@ ndof_per_node = 6;
 % Wind profile parameters
 fprintf('Input reference wind velocity (m/s): ');
 v_ref = input('');             
-z_ref = 10; alpha = 0.14; air_density = 1.225; A_proj = 0.5;  % Wind effect
+z_ref = 10; alpha = 0.14; air_density = 1.225; A_proj = 0.5;  
 
-%% STEP 1-2: Generate nodes and connectivity
+%% Generation of nodes and connectivity
 [xv,yv,zv] = ndgrid(0:Nx-1, 0:Ny-1, 0:Nz-1);
 coords_original = [xv(:), yv(:), zv(:)];    
 numnp = size(coords_original,1);
@@ -30,7 +30,7 @@ end; end; end
 
 nelem = min(117, size(elem,1)); elem = elem(1:nelem,:);
 
-%% STEP 3-4: Matrices and wind profile 
+%% Matrices and wind profile 
 R_x = eye(3); R_y = [0 0 0; 0 1 0; 0 0 1]; R_z = [0 0 0; 0 0 1; 1 0 0];
 T_x = blkdiag(R_x, R_x, R_x, R_x); T_y = blkdiag(R_y, R_y, R_y, R_y); T_z = blkdiag(R_z, R_z, R_z, R_z);
 
@@ -44,7 +44,7 @@ k_local([6,12],[6,12]) = gj*[1 -1; -1 1];
 wind_velocity = @(z) v_ref * max(z / z_ref, 0.1).^alpha;
 pressure_at_z = @(z) 0.5 * air_density * wind_velocity(z).^2;
 
-%% STEP 5: Assembly
+%% Assembly
 ndof = numnp * ndof_per_node; Kglobal = zeros(ndof); Fglobal = zeros(ndof,1);
 for e = 1:nelem
     n1 = elem(e,1); n2 = elem(e,2); z_mean = mean([coords_original(n1,3), coords_original(n2,3)]);
@@ -64,7 +64,7 @@ for e = 1:nelem
     end
 end
 
-%% STEP 6: Solve 
+%% Solution 
 bc_dofs = 1:54;
 
 K_red = Kglobal(bc_dofs(end)+1:end, bc_dofs(end)+1:end);
@@ -82,9 +82,9 @@ U_red = K_red\F_red;
 U = zeros(ndof,1); U(bc_dofs(end)+1:end) = U_red;
 
 
-%% STEP 7: AUTO-SCALE DEFORMATION FOR VISIBILITY
-max_disp = max(abs(U(1:3:ndof)));  % Max translation
-struct_size = max(coords_original(:)) - min(coords_original(:));  % Structure size
+%% AUTO-SCALE DEFORMATION FOR VISIBILITY
+max_disp = max(abs(U(1:3:ndof)));  
+struct_size = max(coords_original(:)) - min(coords_original(:));  
 scale_factor = max(50, struct_size / max_disp * 0.2);  % Auto-scale: 20% of structure size
 
 coords_deformed = coords_original;
@@ -93,7 +93,7 @@ for n = 1:numnp
     coords_deformed(n,:) = coords_original(n,:) + scale_factor * [ux, uy, uz];
 end
 
-%% STEP 8: ENHANCED PLOTTING WITH VISIBLE DEFORMATION
+%% ENHANCED PLOTTING OF THE CODE
 figure('Position', [50 50 1600 700]);
 
 % Original structure
@@ -106,7 +106,7 @@ end
 grid on; xlabel('X (m)'); ylabel('Y (m)'); zlabel('Z (m)');
 view(45,20);
 
-% Deformed structure ONLY
+% Deformed structure only
 subplot(1,3,2); hold on; axis equal;
 for e = 1:nelem
     n1 = elem(e,1); n2 = elem(e,2);
